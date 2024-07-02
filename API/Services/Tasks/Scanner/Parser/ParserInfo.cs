@@ -1,4 +1,4 @@
-﻿using API.Data.Metadata;
+using API.Data.Metadata;
 using API.Entities.Enums;
 
 namespace API.Services.Tasks.Scanner.Parser;
@@ -72,6 +72,12 @@ public class ParserInfo
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
+    /// Used for Koreader to identify the ebook to sync progress
+    /// <remarks>Currently only Epub files have this field</remarks>
+    /// </summary>
+    public string Hash { get; set; } = string.Empty;
+
+    /// <summary>
     /// This can be filled in from ComicInfo.xml during scanning. Will update the SortOrder field on <see cref="Entities.Chapter"/>.
     /// Falls back to Parsed Chapter number
     /// </summary>
@@ -100,7 +106,7 @@ public class ParserInfo
     public void Merge(ParserInfo? info2)
     {
         if (info2 == null) return;
-        Chapters = string.IsNullOrEmpty(Chapters) || Chapters == Parser.DefaultChapter ? info2.Chapters: Chapters;
+        Chapters = string.IsNullOrEmpty(Chapters) || Chapters == Parser.DefaultChapter ? info2.Chapters : Chapters;
         Volumes = string.IsNullOrEmpty(Volumes) || Volumes == Parser.LooseLeafVolume ? info2.Volumes : Volumes;
         Edition = string.IsNullOrEmpty(Edition) ? info2.Edition : Edition;
         Title = string.IsNullOrEmpty(Title) ? info2.Title : Title;

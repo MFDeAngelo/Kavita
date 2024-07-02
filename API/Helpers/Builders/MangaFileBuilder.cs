@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+using System.Text;
+using System.Security.Cryptography;
 using System.IO;
 using API.Entities;
 using API.Entities.Enums;
@@ -20,7 +22,8 @@ public class MangaFileBuilder : IEntityBuilder<MangaFile>
             Pages = pages,
             LastModified = File.GetLastWriteTime(filePath),
             LastModifiedUtc = File.GetLastWriteTimeUtc(filePath),
-            FileName = Parser.RemoveExtensionIfSupported(filePath)
+            FileName = Parser.RemoveExtensionIfSupported(filePath),
+            Hash = GetMd5HashOfFile(filePath)
         };
     }
 
@@ -59,5 +62,14 @@ public class MangaFileBuilder : IEntityBuilder<MangaFile>
     {
         _mangaFile.Id = Math.Max(id, 0);
         return this;
+    }
+
+    private static string GetMd5HashOfFile(string filePath)
+    {
+        using var md5 = MD5.Create();
+        using var stream = File.OpenRead(filePath);
+        byte[] bytes = md5.ComputeHash(stream);
+        return Encoding.Default.GetString(bytes);
+
     }
 }
