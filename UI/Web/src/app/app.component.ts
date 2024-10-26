@@ -22,7 +22,7 @@ import {ServerService} from "./_services/server.service";
 import {OutOfDateModalComponent} from "./announcements/_components/out-of-date-modal/out-of-date-modal.component";
 import {PreferenceNavComponent} from "./sidenav/preference-nav/preference-nav.component";
 import {Breakpoint, UtilityService} from "./shared/_services/utility.service";
-import {translate} from "@jsverse/transloco";
+import {TranslocoService} from "@jsverse/transloco";
 
 @Component({
     selector: 'app-root',
@@ -47,6 +47,7 @@ export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly themeService = inject(ThemeService);
   private readonly document = inject(DOCUMENT);
+  private readonly translocoService = inject(TranslocoService);
 
   protected readonly Breakpoint = Breakpoint;
 
@@ -120,15 +121,18 @@ export class AppComponent implements OnInit {
     this.libraryService.getLibraryNames().pipe(take(1), shareReplay({refCount: true, bufferSize: 1})).subscribe();
 
     // Get the server version, compare vs localStorage, and if different bust locale cache
+    const versionKey = 'kavita--version';
     this.serverService.getVersion(user.apiKey).subscribe(version => {
-      const cachedVersion = localStorage.getItem('kavita--version');
+      const cachedVersion = localStorage.getItem(versionKey);
+      console.log('Kavita version: ', version, ' Running version: ', cachedVersion);
+
       if (cachedVersion == null || cachedVersion != version) {
         // Bust locale cache
-        localStorage.removeItem('@transloco/translations/timestamp');
-        localStorage.removeItem('@transloco/translations');
+        this.bustLocaleCache();
+        localStorage.setItem(versionKey, version);
         location.reload();
       }
-      localStorage.setItem('kavita--version', version);
+      localStorage.setItem(versionKey, version);
     });
 
     // Every hour, have the UI check for an update. People seriously stay out of date
@@ -148,5 +152,13 @@ export class AppComponent implements OnInit {
         })
       )
       .subscribe();
+  }
+
+  private bustLocaleCache() {
+    localStorage.removeItem('@transloco/translations/timestamp');
+    localStorage.removeItem('@transloco/translations');
+    localStorage.removeItem('translocoLang');
+    (this.translocoService as any).cache.delete(localStorage.getItem('kavita-locale') || 'en');
+    (this.translocoService as any).cache.clear();
   }
 }

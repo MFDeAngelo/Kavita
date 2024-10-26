@@ -12,7 +12,7 @@ import { AppRoutingModule } from './app/app-routing.module';
 import { Title, BrowserModule, bootstrapApplication } from '@angular/platform-browser';
 import { JwtInterceptor } from './app/_interceptors/jwt.interceptor';
 import { ErrorInterceptor } from './app/_interceptors/error.interceptor';
-import {HTTP_INTERCEPTORS, withInterceptorsFromDi, provideHttpClient} from '@angular/common/http';
+import { HTTP_INTERCEPTORS, withInterceptorsFromDi, provideHttpClient } from '@angular/common/http';
 import {
     provideTransloco, TranslocoConfig,
     TranslocoService
@@ -29,6 +29,7 @@ import {provideTranslocoPersistTranslations} from "@jsverse/transloco-persist-tr
 import {LazyLoadImageModule} from "ng-lazyload-image";
 import {getSaver, SAVER} from "./app/_providers/saver.provider";
 import {distinctUntilChanged} from "rxjs/operators";
+import {APP_BASE_HREF, PlatformLocation} from "@angular/common";
 
 const disableAnimations = !('animate' in document.documentElement);
 
@@ -115,6 +116,10 @@ const translocoOptions = {
   } as TranslocoConfig
 };
 
+function getBaseHref(platformLocation: PlatformLocation): string {
+  return platformLocation.getBaseHrefFromDOM();
+}
+
 bootstrapApplication(AppComponent, {
     providers: [
         importProvidersFrom(BrowserModule,
@@ -149,6 +154,11 @@ bootstrapApplication(AppComponent, {
         preLoad,
         Title,
         { provide: SAVER, useFactory: getSaver },
+        {
+          provide: APP_BASE_HREF,
+          useFactory: getBaseHref,
+          deps: [PlatformLocation]
+        },
         provideHttpClient(withInterceptorsFromDi())
     ]
 } as ApplicationConfig)

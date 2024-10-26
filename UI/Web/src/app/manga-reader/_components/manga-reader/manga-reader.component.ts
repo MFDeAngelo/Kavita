@@ -30,7 +30,7 @@ import {
   take,
   tap
 } from 'rxjs';
-import {ChangeContext, LabelType, NgxSliderModule, Options} from 'ngx-slider-v2';
+import {ChangeContext, LabelType, NgxSliderModule, Options} from '@angular-slider/ngx-slider';
 import {animate, state, style, transition, trigger} from '@angular/animations';
 import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import {NgbModal, NgbProgressbar} from '@ng-bootstrap/ng-bootstrap';
@@ -1416,7 +1416,7 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
       let numOffset = this.pageNum + i;
 
       if (numOffset > this.maxPages - 1) {
-        continue;
+        break;
       }
 
       const index = (numOffset % this.cachedImages.length + this.cachedImages.length) % this.cachedImages.length;
@@ -1532,14 +1532,15 @@ export class MangaReaderComponent implements OnInit, AfterViewInit, OnDestroy {
     if (direction === PAGING_DIRECTION.BACKWARDS) {
       if (this.continuousChapterInfos[ChapterInfoPosition.Previous] === undefined) return;
       const n = this.continuousChapterInfos[ChapterInfoPosition.Previous]!.pages;
-      pages = Array.from({length: n + 1}, (v, k) => n - k);
+      // Ensure we only load up to 5 pages backward
+      pages = Array.from({ length: Math.min(n + 1, 5) }, (v, k) => n - k);
     } else {
       pages = [0, 1, 2, 3, 4];
     }
 
-    let images = [];
+    const images = [];
     pages.forEach((_, i: number) => {
-      let img = new Image();
+      const img = new Image();
       img.src = this.getPageUrl(i, chapterId);
       images.push(img)
     });

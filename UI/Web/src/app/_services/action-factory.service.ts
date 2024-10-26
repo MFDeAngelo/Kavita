@@ -12,6 +12,7 @@ import { DeviceService } from './device.service';
 import {SideNavStream} from "../_models/sidenav/sidenav-stream";
 import {SmartFilter} from "../_models/metadata/v2/smart-filter";
 import {translate} from "@jsverse/transloco";
+import {Person} from "../_models/metadata/person";
 
 export enum Action {
   Submenu = -1,
@@ -108,6 +109,10 @@ export enum Action {
    * Invoke a refresh covers as false to generate colorscapes
    */
   GenerateColorScape = 26,
+  /**
+   * Copy settings from one entity to another
+   */
+  CopySettings = 27
 }
 
 /**
@@ -156,6 +161,8 @@ export class ActionFactoryService {
 
   bookmarkActions: Array<ActionItem<Series>> = [];
 
+  private personActions: Array<ActionItem<Person>> = [];
+
   sideNavStreamActions: Array<ActionItem<SideNavStream>> = [];
   smartFilterActions: Array<ActionItem<SmartFilter>> = [];
 
@@ -176,11 +183,11 @@ export class ActionFactoryService {
   }
 
   getLibraryActions(callback: ActionCallback<Library>) {
-		return this.applyCallbackToList(this.libraryActions, callback);
+    return this.applyCallbackToList(this.libraryActions, callback);
   }
 
   getSeriesActions(callback: ActionCallback<Series>) {
-		return this.applyCallbackToList(this.seriesActions, callback);
+    return this.applyCallbackToList(this.seriesActions, callback);
   }
 
   getSideNavStreamActions(callback: ActionCallback<SideNavStream>) {
@@ -192,7 +199,7 @@ export class ActionFactoryService {
   }
 
   getVolumeActions(callback: ActionCallback<Volume>) {
-		return this.applyCallbackToList(this.volumeActions, callback);
+    return this.applyCallbackToList(this.volumeActions, callback);
   }
 
   getChapterActions(callback: ActionCallback<Chapter>) {
@@ -200,7 +207,7 @@ export class ActionFactoryService {
   }
 
   getCollectionTagActions(callback: ActionCallback<UserCollection>) {
-		return  this.applyCallbackToList(this.collectionTagActions, callback);
+    return  this.applyCallbackToList(this.collectionTagActions, callback);
   }
 
   getReadingListActions(callback: ActionCallback<ReadingList>) {
@@ -209,6 +216,10 @@ export class ActionFactoryService {
 
   getBookmarkActions(callback: ActionCallback<Series>) {
     return this.applyCallbackToList(this.bookmarkActions, callback);
+  }
+
+  getPersonActions(callback: ActionCallback<Person>) {
+    return this.applyCallbackToList(this.personActions, callback);
   }
 
   dummyCallback(action: ActionItem<any>, data: any) {}
@@ -253,6 +264,43 @@ export class ActionFactoryService {
     // Filter out tasks that don't make sense
     return tasks.filter(t => !blacklist.includes(t.action));
   }
+
+  getBulkLibraryActions(callback: ActionCallback<Library>) {
+
+    // Scan is currently not supported due to the backend not being able to handle it yet
+    const actions = this.flattenActions<Library>(this.libraryActions).filter(a => {
+      return [Action.Delete, Action.GenerateColorScape, Action.AnalyzeFiles, Action.RefreshMetadata, Action.CopySettings].includes(a.action);
+    });
+
+    actions.push({
+      _extra: undefined,
+      class: undefined,
+      description: '',
+      dynamicList: undefined,
+      action: Action.CopySettings,
+      callback: this.dummyCallback,
+      children: [],
+      requiresAdmin: true,
+      title: 'copy-settings'
+    })
+    return this.applyCallbackToList(actions, callback);
+  }
+
+  flattenActions<T>(actions: Array<ActionItem<T>>): Array<ActionItem<T>> {
+    return actions.reduce<Array<ActionItem<T>>>((flatArray, action) => {
+      if (action.action !== Action.Submenu) {
+        flatArray.push(action);
+      }
+
+      // Recursively flatten the children, if any
+      if (action.children && action.children.length > 0) {
+        flatArray.push(...this.flattenActions<T>(action.children));
+      }
+
+      return flatArray;
+    }, [] as Array<ActionItem<T>>); // Explicitly defining the type of flatArray
+  }
+
 
   private _resetActions() {
     this.libraryActions = [
@@ -383,7 +431,7 @@ export class ActionFactoryService {
         callback: this.dummyCallback,
         requiresAdmin: false,
         children: [
-        	{
+          {
             action: Action.AddToWantToReadList,
             title: 'add-to-want-to-read',
             description: 'add-to-want-to-read-tooltip',
@@ -538,23 +586,23 @@ export class ActionFactoryService {
         requiresAdmin: false,
         children: [],
       },
-			{
-				action: Action.Submenu,
-				title: 'add-to',
+      {
+        action: Action.Submenu,
+        title: 'add-to',
         description: '=',
-				callback: this.dummyCallback,
-				requiresAdmin: false,
-				children: [
-					{
-						action: Action.AddToReadingList,
-						title: 'add-to-reading-list',
+        callback: this.dummyCallback,
+        requiresAdmin: false,
+        children: [
+          {
+            action: Action.AddToReadingList,
+            title: 'add-to-reading-list',
             description: 'add-to-reading-list-tooltip',
-						callback: this.dummyCallback,
-						requiresAdmin: false,
-						children: [],
-					}
-				]
-			},
+            callback: this.dummyCallback,
+            requiresAdmin: false,
+            children: [],
+          }
+        ]
+      },
       {
         action: Action.Submenu,
         title: 'send-to',
@@ -635,23 +683,23 @@ export class ActionFactoryService {
         requiresAdmin: false,
         children: [],
       },
-			{
-				action: Action.Submenu,
-				title: 'add-to',
+      {
+        action: Action.Submenu,
+        title: 'add-to',
         description: '',
-				callback: this.dummyCallback,
-				requiresAdmin: false,
-				children: [
-					{
-						action: Action.AddToReadingList,
-						title: 'add-to-reading-list',
+        callback: this.dummyCallback,
+        requiresAdmin: false,
+        children: [
+          {
+            action: Action.AddToReadingList,
+            title: 'add-to-reading-list',
             description: 'add-to-reading-list-tooltip',
-						callback: this.dummyCallback,
-						requiresAdmin: false,
-						children: [],
-					}
-				]
-			},
+            callback: this.dummyCallback,
+            requiresAdmin: false,
+            children: [],
+          }
+        ]
+      },
       {
         action: Action.Submenu,
         title: 'send-to',
@@ -744,6 +792,17 @@ export class ActionFactoryService {
       },
     ];
 
+    this.personActions = [
+      {
+        action: Action.Edit,
+        title: 'edit',
+        description: 'edit-person-tooltip',
+        callback: this.dummyCallback,
+        requiresAdmin: true,
+        children: [],
+      }
+    ];
+
     this.bookmarkActions = [
       {
         action: Action.ViewSeries,
@@ -813,13 +872,13 @@ export class ActionFactoryService {
     });
   }
 
-	public applyCallbackToList(list: Array<ActionItem<any>>, callback: (action: ActionItem<any>, data: any) => void): Array<ActionItem<any>> {
-		const actions = list.map((a) => {
-			return { ...a };
-		});
-		actions.forEach((action) => this.applyCallback(action, callback));
-		return actions;
-	}
+  public applyCallbackToList(list: Array<ActionItem<any>>, callback: (action: ActionItem<any>, data: any) => void): Array<ActionItem<any>> {
+    const actions = list.map((a) => {
+      return { ...a };
+    });
+    actions.forEach((action) => this.applyCallback(action, callback));
+    return actions;
+  }
 
   // Checks the whole tree for the action and returns true if it exists
   public hasAction(actions: Array<ActionItem<any>>, action: Action) {

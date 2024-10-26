@@ -117,7 +117,7 @@ public class Chapter : IEntityDate, IHasReadTimeEstimate, IHasCoverImage
     /// <inheritdoc cref="IHasReadTimeEstimate"/>
     public int MaxHoursToRead { get; set; }
     /// <inheritdoc cref="IHasReadTimeEstimate"/>
-    public int AvgHoursToRead { get; set; }
+    public float AvgHoursToRead { get; set; }
     /// <summary>
     /// Comma-separated link of urls to external services that have some relation to the Chapter
     /// </summary>
@@ -153,7 +153,7 @@ public class Chapter : IEntityDate, IHasReadTimeEstimate, IHasCoverImage
     /// <summary>
     /// All people attached at a Chapter level. Usually Comics will have different people per issue.
     /// </summary>
-    public ICollection<Person> People { get; set; } = new List<Person>();
+    public ICollection<ChapterPeople> People { get; set; } = new List<ChapterPeople>();
     /// <summary>
     /// Genres for the Chapter
     /// </summary>

@@ -69,7 +69,9 @@ export class SettingItemComponent {
           if (!this.toggleOnViewClick) return false;
 
           const mouseEvent = event as MouseEvent;
-          return !elementRef.nativeElement.contains(mouseEvent.target)
+          const selection = window.getSelection();
+          const hasSelection = selection !== null && selection.toString().trim() === '';
+          return !elementRef.nativeElement.contains(mouseEvent.target) && hasSelection;
         }),
         tap(() => {
           this.isEditMode = false;
@@ -83,6 +85,7 @@ export class SettingItemComponent {
   toggleEditMode() {
 
     if (!this.toggleOnViewClick) return;
+    if (!this.canEdit) return;
 
     this.isEditMode = !this.isEditMode;
     this.editMode.emit(this.isEditMode);
